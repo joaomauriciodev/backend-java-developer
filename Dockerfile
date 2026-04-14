@@ -1,15 +1,17 @@
-# Imagem base com Java 25 (JDK)
-FROM eclipse-temurin:25-jdk-alpine AS build
+FROM maven:3.9.14-eclipse-temurin-25 AS build
 
 WORKDIR /app
 
-COPY target/*.jar app.jar
+COPY pom.xml .
+COPY src ./src
+
+RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:25-jre-alpine
 
 WORKDIR /app
 
-COPY --from=build /app/app.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 9012
 
