@@ -3,6 +3,7 @@ package com.cmanager.app.authentication.service;
 import com.cmanager.app.authentication.data.UserCreateRequest;
 import com.cmanager.app.authentication.data.UserDTO;
 import com.cmanager.app.authentication.data.UserUpdateRequest;
+import com.cmanager.app.authentication.domain.Role;
 import com.cmanager.app.authentication.domain.User;
 import com.cmanager.app.authentication.repository.UserRepository;
 import com.cmanager.app.core.exception.AlreadyExistsException;
@@ -47,7 +48,20 @@ public class UserService {
         final User u = new User();
         u.setUsername(req.username());
         u.setPassword(passwordEncoder.encode(req.password()));
-        u.setRole(req.role());
+        u.setRole(Role.USER);
+        u.setEnabled(req.enabled());
+        return userRepository.save(u);
+    }
+
+    @Transactional
+    public User createAdmin(UserCreateRequest req) {
+        if (userRepository.existsByUsername(req.username())) {
+            throw new AlreadyExistsException("User", req.username());
+        }
+        final User u = new User();
+        u.setUsername(req.username());
+        u.setPassword(passwordEncoder.encode(req.password()));
+        u.setRole(Role.ADMIN);
         u.setEnabled(req.enabled());
         return userRepository.save(u);
     }
