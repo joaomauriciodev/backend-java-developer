@@ -14,6 +14,6 @@ public class AbstractRequest<T> {
     }
 
     public T getShow(String url, ParameterizedTypeReference<T> typeReference) {
-        return null;
+        return restTemplate.exchange(url, org.springframework.http.HttpMethod.GET, null, typeReference).getBody();
     }
 }
