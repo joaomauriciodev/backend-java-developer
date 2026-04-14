@@ -6,7 +6,6 @@ import com.cmanager.app.application.domain.Episode;
 import com.cmanager.app.application.domain.Show;
 import com.cmanager.app.application.repository.EpisodeRepository;
 import com.cmanager.app.application.repository.ShowRepository;
-import com.cmanager.app.core.exception.AlreadyExistsException;
 import com.cmanager.app.integration.client.RequestService;
 import com.cmanager.app.integration.dto.EpisodeRequestDTO;
 import com.cmanager.app.integration.dto.ShowsRequestDTO;
@@ -34,11 +33,10 @@ public class SyncShowService {
     public ShowDTO sync(ShowCreateRequest request) {
         final ShowsRequestDTO external = requestService.getShow(request.name());
 
-        if (showRepository.findByIdIntegration(external.id()).isPresent()) {
-            throw new AlreadyExistsException("Show", external.name());
-        }
+        final Show show = showRepository.findByIdIntegration(external.id())
+                .map(existing -> updateShow(existing, external))
+                .orElseGet(() -> toShow(external));
 
-        final Show show = toShow(external);
         showRepository.save(show);
 
         final List<EpisodeRequestDTO> episodes = external._embedded() != null
@@ -46,12 +44,40 @@ public class SyncShowService {
                 : List.of();
 
         for (EpisodeRequestDTO ep : episodes) {
-            if (!episodeRepository.existsByIdIntegration(ep.id())) {
-                episodeRepository.save(toEpisode(ep, show.getId()));
-            }
+            final Episode episode = episodeRepository.findByIdIntegration(ep.id())
+                    .map(existing -> updateEpisode(existing, ep))
+                    .orElseGet(() -> toEpisode(ep, show.getId()));
+            episodeRepository.save(episode);
         }
 
         return ShowDTO.convertEntity(show);
+    }
+
+    private Show updateShow(Show show, ShowsRequestDTO dto) {
+        show.setName(dto.name());
+        show.setType(dto.type());
+        show.setLanguage(dto.language());
+        show.setStatus(dto.status());
+        show.setRuntime(dto.runtime());
+        show.setAverageRuntime(dto.averageRuntime());
+        show.setOfficialSite(dto.officialSite());
+        show.setRating(dto.rating() != null ? dto.rating().average() : null);
+        show.setSummary(dto.summary());
+        return show;
+    }
+
+    private Episode updateEpisode(Episode episode, EpisodeRequestDTO dto) {
+        episode.setName(dto.name());
+        episode.setSeason(dto.season());
+        episode.setNumber(dto.number());
+        episode.setType(dto.type());
+        episode.setAirdate(dto.airdate());
+        episode.setAirtime(dto.airtime());
+        episode.setAirstamp(dto.airstamp() != null ? dto.airstamp().toString() : null);
+        episode.setRuntime(dto.runtime());
+        episode.setRating(dto.rating() != null ? dto.rating().average() : null);
+        episode.setSummary(dto.summary());
+        return episode;
     }
 
     private Show toShow(ShowsRequestDTO dto) {
