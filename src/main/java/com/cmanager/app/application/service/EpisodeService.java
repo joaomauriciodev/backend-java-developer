@@ -5,7 +5,10 @@ import com.cmanager.app.application.domain.Episode;
 import com.cmanager.app.application.domain.Show;
 import com.cmanager.app.application.repository.EpisodeRepository;
 import com.cmanager.app.application.repository.ShowRepository;
+import com.cmanager.app.core.data.PageResultResponse;
+import com.cmanager.app.core.utils.Util;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -25,17 +28,18 @@ public class EpisodeService {
         this.showRepository = showRepository;
     }
 
-    public List<SeasonAverageDTO> averagePerSeason() {
-        final List<Episode> episodes = episodeRepository.findAll();
+    public PageResultResponse<SeasonAverageDTO> averagePerSeason(String showName, int page, int size, String sortField, String sortOrder) {
+        final Map<String, Show> showsById = resolveShows(showName);
+
+        final List<Episode> episodes = showsById.isEmpty()
+                ? episodeRepository.findAll()
+                : episodeRepository.findByFkShowIn(List.copyOf(showsById.keySet()));
 
         if (episodes.isEmpty()) {
             throw new EntityNotFoundException("No episodes found");
         }
 
-        final Map<String, Show> showsById = showRepository.findAll().stream()
-                .collect(Collectors.toMap(Show::getId, s -> s));
-
-        return episodes.stream()
+        final List<SeasonAverageDTO> aggregated = episodes.stream()
                 .collect(Collectors.groupingBy(e -> e.getFkShow() + "-" + e.getSeason()))
                 .entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
@@ -62,5 +66,21 @@ public class EpisodeService {
                     );
                 })
                 .toList();
+
+        final var pageable = Util.getPageable(page, size, sortField, sortOrder);
+        final int total = aggregated.size();
+        final int from = Math.min(page * size, total);
+        final int to = Math.min(from + size, total);
+
+        return PageResultResponse.from(
+                new PageImpl<>(aggregated.subList(from, to), pageable, total)
+        );
+    }
+
+    private Map<String, Show> resolveShows(String showName) {
+        final List<Show> shows = showName.isBlank()
+                ? showRepository.findAll()
+                : showRepository.findByNameContainingIgnoreCase(showName);
+        return shows.stream().collect(Collectors.toMap(Show::getId, s -> s));
     }
 }
