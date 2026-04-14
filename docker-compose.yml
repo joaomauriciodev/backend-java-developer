@@ -1,6 +1,22 @@
-version: "3.9"
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-tvshow
+    environment:
+      POSTGRES_DB: tvshow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   myapp:
     build:
       context: .
@@ -12,3 +28,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: dev
     restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    
+volumes:
+  postgres-data:
