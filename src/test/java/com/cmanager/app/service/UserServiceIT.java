@@ -51,7 +51,7 @@ class UserServiceIT extends AbstractPostgresContainerIT {
     @Test
     @DisplayName("create() salva, encoda senha e enabled default true quando null")
     void create_ok() {
-        var req = new UserCreateRequest("alice", "pwd", Role.USER, true);
+        var req = new UserCreateRequest("alice", "pwd", true);
         User saved = service.create(req);
 
         assertThat(saved.getId()).isNotNull();
@@ -59,7 +59,7 @@ class UserServiceIT extends AbstractPostgresContainerIT {
         assertThat(saved.isEnabled()).isTrue();
         assertThat(passwordEncoder.matches("pwd", saved.getPassword())).isTrue();
 
-        var req2 = new UserCreateRequest("alice", "pwd", Role.USER, true);
+        var req2 = new UserCreateRequest("alice", "pwd", true);
         User saved2 = service.create(req2);
         assertThat(saved2.getId()).isNotNull();
     }
@@ -90,9 +90,9 @@ class UserServiceIT extends AbstractPostgresContainerIT {
     @DisplayName("findByUsernameContainingIgnoreCase usa paginação/ordenação do Util")
     void findByUsername_paged() {
         // mais dados
-        service.create(new UserCreateRequest("alex", "x", Role.USER, true));
-        service.create(new UserCreateRequest("alberto", "x", Role.USER, true));
-        service.create(new UserCreateRequest("bob", "x", Role.USER, true));
+        service.create(new UserCreateRequest("alex", "x",  true));
+        service.create(new UserCreateRequest("alberto", "x", true));
+        service.create(new UserCreateRequest("bob", "x", true));
 
         var pageable = Util.getPageable(0, 2, "username", "ASC");
         var page = service.findByUsernameContainingIgnoreCase("al", pageable);
@@ -113,7 +113,7 @@ class UserServiceIT extends AbstractPostgresContainerIT {
     @DisplayName("create() deve lançar UsernameAlreadyExistsException quando username já existe")
     void create_conflict_username() {
         // seed já criou "seed"
-        var dup = new UserCreateRequest("seed", "pwd", Role.USER, true);
+        var dup = new UserCreateRequest("seed", "pwd", true);
         assertThatThrownBy(() -> service.create(dup))
                 .isInstanceOf(AlreadyExistsException.class);
     }
@@ -122,7 +122,7 @@ class UserServiceIT extends AbstractPostgresContainerIT {
     @DisplayName("update() deve lançar UsernameAlreadyExistsException quando mudar para username já usado por outro")
     void update_conflict_username() {
         // cria outro usuário "bob"
-         service.create(new UserCreateRequest("bob", "x", Role.USER, true));
+         service.create(new UserCreateRequest("bob", "x",  true));
         // tenta renomear seed -> bob
         var req = new UserUpdateRequest("bob", null, null, null);
         assertThatThrownBy(() -> service.update(existingId, req))

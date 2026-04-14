@@ -1,6 +1,5 @@
 package com.cmanager.app.authentication.data;
 
-import com.cmanager.app.authentication.domain.Role;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -17,10 +16,7 @@ public record UserCreateRequest(
         @Schema(name = "password", description = "Senha para acesso")
         @NotBlank
         @Size(min = 6, max = 200)
-        String password,
-        @Schema(name = "role", description = "Permissão")
-        @NotNull
-        Role role,
+        String password,   
         @NotNull
         @Schema(name = "enabled", description = "Habilitado true ou false")
         boolean enabled
