@@ -50,10 +50,11 @@ public class AuthenticationService {
 
     private TokenResponse getTokenResponse(User user, String role) {
         final Instant now = Instant.now();
+        final Instant expiresAt = now.plus(expMinutes, ChronoUnit.MINUTES);
         final JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer(issuer)
                 .issuedAt(now)
-                .expiresAt(now.plus(expMinutes, ChronoUnit.MINUTES))
+                .expiresAt(expiresAt)
                 .subject(user.getUsername())
                 .claim("role", role)
                 .build();
@@ -63,6 +64,6 @@ public class AuthenticationService {
                 .encode(JwtEncoderParameters.from(headers, claims))
                 .getTokenValue();
 
-        return new TokenResponse(token);
+        return new TokenResponse(token, expiresAt);
     }
 }

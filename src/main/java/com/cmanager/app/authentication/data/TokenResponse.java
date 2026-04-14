@@ -9,6 +9,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record TokenResponse(
         @JsonProperty("token")
         @Schema(name = "token", description = "Token do usuario")
-        String token
+        String token,
+
+        @JsonProperty("expiresAt")
+        @Schema(name = "expiresAt", description = "Data/hora de expiração do token")
+        java.time.Instant expiresAt
 ) {
 }
