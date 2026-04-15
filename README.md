@@ -1,29 +1,95 @@
-# Avaliação Desenvolvedor Backend Java
+# cmanager-service
 
-## Objetivo:
-Avaliar a capacidade do desenvolvedor em construir e evoluir uma API REST robusta, utilizando
-Java (versão estável mais recente), Spring Boot, banco de dados PostgreSQL, integrações externas,
-boas práticas de arquitetura, organização de código, segurança, Docker e documentação
+API REST para gerenciamento de usuários e séries de TV, integrada com a API pública [TVMaze](https://www.tvmaze.com/api).
 
-## Requisitos técnicos:
+## Stack
 
-- Java 25
-- Spring Boot
-- Docker
-- PostgreSQL 16.X
-- Flyway
-- Spring Security
-- Arquitetura em camadas
-- WebClient ou RestTemplate
-- Tratamento de erros padronizado
-- Documentação via SpringDoc (Swagger)
+- Java 25 + Spring Boot 3.5
+- PostgreSQL 16
+- Flyway (migrações)
+- Spring Security + JWT
+- Caffeine Cache
+- Resilience4j (retry)
+- SpringDoc / Swagger UI
 
-## Estrutura disponibilizada
+## Pré-requisitos
 
-- Camada de segurança parcialmente pronta
-- DTOs da API externa
-- User (controller, service, repository)
-- Flyway com tabelas user e show
-- Classe de paginação (Util.class)
+- Docker e Docker Compose
+- Java 25 (para execução local sem Docker)
+- Maven 3.9+ (para execução local sem Docker)
 
-- Classe modelo para chamadas externas (AbstractRequest<T>.class)
+---
+
+## Execução com Docker (recomendado)
+
+Sobe o banco e a aplicação juntos:
+
+```bash
+docker compose up --build
+```
+
+A aplicação estará disponível em `http://localhost:9012`.
+
+Para parar:
+
+```bash
+docker compose down
+```
+
+---
+
+## Execução local (sem Docker)
+
+**1. Suba apenas o banco:**
+
+```bash
+docker compose up postgres -d
+```
+
+**2. Configure a datasource** — edite `src/main/resources/application-dev.yml` e ajuste a URL para apontar para `localhost`:
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/tvshow
+```
+
+**3. Execute a aplicação:**
+
+```bash
+./mvnw spring-boot:run
+```
+
+---
+
+## Testes
+
+```bash
+# Testes unitários
+./mvnw test
+
+# Testes de integração
+./mvnw verify
+```
+
+---
+
+## Documentação (Swagger)
+
+Após subir a aplicação, acesse:
+
+```
+http://localhost:9012/swagger-ui.html
+```
+
+---
+
+## Variáveis de ambiente relevantes
+
+| Variável                | Padrão  | Descrição                   |
+|-------------------------|---------|-----------------------------|
+| `SERVER_PORT`           | `9012`  | Porta da aplicação          |
+| `ENVIRONMENT`           | `dev`   | Perfil Spring ativo         |
+| `SPRING_PROFILES_ACTIVE`| `dev`   | Perfil (no Docker Compose)  |
+
+> O secret JWT está definido em `application-dev.yml`. Em produção, substitua pela variável de ambiente correspondente.
