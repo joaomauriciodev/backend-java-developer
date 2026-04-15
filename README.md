@@ -79,7 +79,7 @@ spring:
 Após subir a aplicação, acesse:
 
 ```
-http://localhost:9012/swagger-ui.html
+http://localhost:9012/swagger-ui/index.html
 ```
 
 ---
