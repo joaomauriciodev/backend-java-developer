@@ -40,7 +40,7 @@ app:
   jwt:
     issuer: example-auth
     expiration-minutes: 120
-    secret: "change-me-in-prod-please-32-bytes-minimum-aaaaaaaaaaaaaa"
+    secret: "MWLjptNgkVeEoxNvuv9reWr3i6EjPk1dOg1dJ+XOhYccqSSpoiWdDpMKDOndNtF/"
 
 logging:
   level:
