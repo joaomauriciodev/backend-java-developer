@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/tvshow
+    url: jdbc:postgresql://postgres:5432/tvshow
     username: postgres
     password: postgres
   jpa:
@@ -17,6 +17,24 @@ spring:
     locations: classpath:db/migration
   main:
     allow-circular-references: true
+  cache:
+    caffeine:
+      expire-after-write-minutes: 10
+      maximum-size: 500
+
+tvmaze:
+  client:
+    connect-timeout: 3000
+    read-timeout: 5000
+
+resilience4j:
+  retry:
+    instances:
+      tvmaze:
+        max-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - org.springframework.web.client.ResourceAccessException
 
 app:
   jwt:

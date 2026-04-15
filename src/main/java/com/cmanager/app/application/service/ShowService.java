@@ -4,6 +4,7 @@ import com.cmanager.app.application.data.ShowDTO;
 import com.cmanager.app.application.repository.ShowRepository;
 import com.cmanager.app.core.data.PageResultResponse;
 import com.cmanager.app.core.utils.Util;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ public class ShowService {
         this.showRepository = showRepository;
     }
 
+    @Cacheable(value = "shows", key = "#name + '-' + #page + '-' + #size + '-' + #sortField + '-' + #sortOrder")
     public PageResultResponse<ShowDTO> list(String name, int page, int size, String sortField, String sortOrder) {
         final var pageable = Util.getPageable(page, size, sortField, sortOrder);
         final var result = showRepository.findByNameContainingIgnoreCase(name, pageable);

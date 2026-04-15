@@ -9,6 +9,7 @@ import com.cmanager.app.application.repository.ShowRepository;
 import com.cmanager.app.integration.client.RequestService;
 import com.cmanager.app.integration.dto.EpisodeRequestDTO;
 import com.cmanager.app.integration.dto.ShowsRequestDTO;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,7 @@ public class SyncShowService {
     }
 
     @Transactional
+    @CacheEvict(value = "shows", allEntries = true)
     public ShowDTO sync(ShowCreateRequest request) {
         final ShowsRequestDTO external = requestService.getShow(request.name());
 
