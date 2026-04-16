@@ -68,7 +68,7 @@ class UserServiceIT extends AbstractPostgresContainerIT {
     @DisplayName("update() altera somente campos não nulos e re-encoda senha")
     void update_ok() {
         var req = new UserUpdateRequest("seed-upd", "newpass", Role.USER, false);
-        User upd = service.update(existingId, req);
+        User upd = service.update(existingId, req, "requester", true);
 
         assertThat(upd.getUsername()).isEqualTo("seed-upd");
         assertThat(upd.getRole()).isEqualTo(Role.USER);
@@ -105,7 +105,7 @@ class UserServiceIT extends AbstractPostgresContainerIT {
     @Test
     @DisplayName("delete() remove o usuário")
     void delete_ok() {
-        service.delete(existingId);
+        service.delete(existingId, "requester");
         assertThat(repository.findById(existingId)).isEmpty();
     }
 
@@ -125,7 +125,7 @@ class UserServiceIT extends AbstractPostgresContainerIT {
          service.create(new UserCreateRequest("bob", "x",  true));
         // tenta renomear seed -> bob
         var req = new UserUpdateRequest("bob", null, null, null);
-        assertThatThrownBy(() -> service.update(existingId, req))
+        assertThatThrownBy(() -> service.update(existingId, req, "requester", false))
                 .isInstanceOf(AlreadyExistsException.class);
     }
 }
