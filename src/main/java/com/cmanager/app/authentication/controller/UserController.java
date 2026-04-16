@@ -14,6 +14,8 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,7 +62,7 @@ public class UserController {
                         @ApiResponse(responseCode = "200", description = "Consulta realizada com sucesso")
         })
         @GetMapping("/{id}")
-        @PreAuthorize("hasAnyRole('ADMIN','USER')")
+        @PreAuthorize("hasRole('ADMIN')")
         public ResponseEntity<UserDTO> get(@PathVariable String id) {
                 final UserDTO dto = UserDTO.convertEntity(userService.findById(id));
                 return ResponseEntity.ok(dto);
@@ -89,10 +91,12 @@ public class UserController {
                         @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso")
         })
         @PutMapping("/{id}")
-        @PreAuthorize("hasRole('ADMIN')")
+        @PreAuthorize("hasAnyRole('ADMIN','USER')")
         public ResponseEntity<UserDTO> update(@PathVariable String id,
-                        @RequestBody @Valid UserUpdateRequest req) {
-                final UserDTO dto = UserDTO.convertEntity(userService.update(id, req));
+                        @RequestBody @Valid UserUpdateRequest req,
+                        @AuthenticationPrincipal Jwt jwt) {
+                final boolean isAdmin = "ROLE_ADMIN".equals(jwt.getClaimAsString("role"));
+                final UserDTO dto = UserDTO.convertEntity(userService.update(id, req, jwt.getSubject(), isAdmin));
                 return ResponseEntity.ok(dto);
         }
 
@@ -101,8 +105,8 @@ public class UserController {
         })
         @DeleteMapping("/{id}")
         @PreAuthorize("hasRole('ADMIN')")
-        public ResponseEntity<Void> delete(@PathVariable String id) {
-                userService.delete(id);
+        public ResponseEntity<Void> delete(@PathVariable String id, @AuthenticationPrincipal Jwt jwt) {
+                userService.delete(id, jwt.getSubject());
                 return ResponseEntity.noContent().build();
         }
 }

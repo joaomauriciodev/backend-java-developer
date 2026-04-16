@@ -9,6 +9,7 @@ import com.cmanager.app.authentication.repository.UserRepository;
 import com.cmanager.app.core.exception.AlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -67,7 +68,7 @@ public class UserService {
     }
 
     @Transactional
-    public User update(String id, UserUpdateRequest req) {
+    public User update(String id, UserUpdateRequest req, String requesterUsername, boolean isAdmin) {
         final User u = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
         if (StringUtils.isNotBlank(req.username())) {
             userRepository.findByUsername(req.username())
@@ -78,14 +79,26 @@ public class UserService {
             u.setUsername(req.username());
         }
         if (StringUtils.isNotBlank(req.password())) u.setPassword(passwordEncoder.encode(req.password()));
-        if (req.role() != null) u.setRole(req.role());
+        if (req.role() != null) {
+            if (!isAdmin) {
+                throw new AccessDeniedException("Only ADMIN can change roles");
+            }
+            if (u.getUsername().equals(requesterUsername)) {
+                throw new IllegalArgumentException("Admin cannot change its own role");
+            }
+            u.setRole(req.role());
+        }
         if (req.enabled() != null) u.setEnabled(req.enabled());
         return userRepository.save(u);
     }
 
     @Transactional
-    public void delete(String id) {
-        userRepository.deleteById(id);
+    public void delete(String id, String requesterUsername) {
+        final User u = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        if (u.getUsername().equals(requesterUsername)) {
+            throw new IllegalArgumentException("Admin cannot delete itself");
+        }
+        userRepository.delete(u);
     }
 
     public User findById(String id) {
